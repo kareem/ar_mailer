@@ -40,9 +40,9 @@ module ArMailer; end
 class ArMailer::ARSendmail
 
   ##
-  # The version of ActionMailer::ARSendmail you are running.
+  # The version of ArMailer::ARSendmail you are running.
 
-  VERSION = '2.1.8'
+  VERSION = '3.0.0'
 
   ##
   # Maximum number of times authentication will be consecutively retried
