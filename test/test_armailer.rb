@@ -4,7 +4,7 @@ class Mailer < ActionMailer::Base
   self.delivery_method = :activerecord
 
   def mail
-    @mail = Object.new
+    @mail = Mail::Message.new
     def @mail.encoded() 'email' end
     def @mail.from() ['nobody@example.com'] end
     def @mail.[](key) {'return-path' => $return_path, 'from' => 'nobody@example.com'}[key] end

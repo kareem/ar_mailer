@@ -35,9 +35,9 @@ end
 # * --daemon
 # * --mailq
 
-module ActionMailer; end
+module ArMailer; end
 
-class ActionMailer::ARSendmail
+class ArMailer::ARSendmail
 
   ##
   # The version of ActionMailer::ARSendmail you are running.
@@ -250,7 +250,7 @@ class ActionMailer::ARSendmail
     Dir.chdir options[:Chdir] do
       begin
         require 'config/environment'
-        require 'action_mailer/ar_mailer'
+        require 'ar_mailer/active_record'
       rescue LoadError
         usage opts, <<-EOF
 #{name} must be run from a Rails application's root to deliver email.

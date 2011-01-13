@@ -106,9 +106,19 @@ class ActionMailer::Base
   end
 
   def deliver!
-    perform_delivery_activerecord @mail
+    ArMailer::ActiveRecord.new.deliver!(@mail)
   end
 
+  def self.add_delivery_method(*args)
+
+  end
+
+end
+
+module Mail
+  class Message
+
+  end
 end
 
 ##
