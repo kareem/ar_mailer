@@ -383,7 +383,9 @@ class ActionMailer::ARSendmail
         rescue Net::SMTPFatalError => e
           log "5xx error sending email %d, removing from queue: %p(%s):\n\t%s" %
                 [email.id, e.message, e.class, e.backtrace.join("\n\t")]
-          email.destroy
+          email.failed_at = Time.now.utc
+          email.failure_message = e.message
+          email.save(false) rescue nil
           session.reset
         rescue Net::SMTPServerBusy => e
           log "server too busy, stopping delivery cycle"
@@ -424,7 +426,7 @@ class ActionMailer::ARSendmail
   # last 300 seconds.
 
   def find_emails
-    options = { :conditions => ['last_send_attempt < ?', Time.now.to_i - 300] }
+    options = { :conditions => ['failed_at IS NULL AND last_send_attempt < ?', Time.now.to_i - 300] }
     options[:limit] = batch_size unless batch_size.nil?
     mail = ActionMailer::Base.email_class.find :all, options
 

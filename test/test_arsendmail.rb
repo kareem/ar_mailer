@@ -391,8 +391,11 @@ Last send attempt: Thu Aug 10 11:40:05 %s 2006
     end
 
     assert_equal 0, Net::SMTP.deliveries.length
-    assert_equal 0, Email.records.length
+    assert_equal 1, Email.records.length
     assert_equal 1, Net::SMTP.reset_called, 'Reset connection on SyntaxError'
+
+    assert_kind_of Time, Email.records.first.failed_at
+    assert_equal Email.records.first.failure_message, "unknown recipient"
 
     assert_equal '', out
     assert_equal "5xx error sending email 1, removing from queue: \"unknown recipient\"(Net::SMTPFatalError):\n\tone\n\ttwo\n\tthree\n", err
@@ -513,6 +516,17 @@ Last send attempt: Thu Aug 10 11:40:05 %s 2006
 
     assert_equal '', out
     assert_equal "found 3 emails to send\n", err
+  end
+
+  def test_find_emails_no_5xx_error_recovery
+    Email.create :failed_at => Time.now.utc
+    found_emails = []
+
+    out, err = capture_io do
+      found_emails = @sm.find_emails
+    end
+
+    assert_equal [], found_emails
   end
 
   def test_smtp_settings
