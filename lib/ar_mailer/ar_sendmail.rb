@@ -42,7 +42,7 @@ class ArMailer::ARSendmail
   ##
   # The version of ArMailer::ARSendmail you are running.
 
-  VERSION = '3.0.0'
+  VERSION = '3.0.1'
 
   ##
   # Maximum number of times authentication will be consecutively retried
