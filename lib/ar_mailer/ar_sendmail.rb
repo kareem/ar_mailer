@@ -98,7 +98,7 @@ class ArMailer::ARSendmail
   # to learn how to enable ActiveRecord::Timestamp.
 
   def self.mailq
-    emails = ActionMailer::Base.email_class.find :all
+    emails = ArMailer::ActiveRecord.email_class.find :all
 
     if emails.empty? then
       puts "Mail queue is empty"
@@ -348,7 +348,7 @@ class ArMailer::ARSendmail
     return if @max_age == 0
     timeout = Time.now - @max_age
     conditions = ['last_send_attempt > 0 and created_on < ?', timeout]
-    mail = ActionMailer::Base.email_class.destroy_all conditions
+    mail = ArMailer::ActiveRecord.email_class.destroy_all conditions
 
     log "expired #{mail.length} emails from the queue"
   end
@@ -428,7 +428,7 @@ class ArMailer::ARSendmail
   def find_emails
     options = { :conditions => ['failed_at IS NULL AND last_send_attempt < ?', Time.now.to_i - 300] }
     options[:limit] = batch_size unless batch_size.nil?
-    mail = ActionMailer::Base.email_class.find :all, options
+    mail = ArMailer::ActiveRecord.email_class.find :all, options
 
     log "found #{mail.length} emails to send"
     mail
