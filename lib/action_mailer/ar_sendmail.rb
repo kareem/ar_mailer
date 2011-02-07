@@ -249,7 +249,7 @@ class ActionMailer::ARSendmail
 
     Dir.chdir options[:Chdir] do
       begin
-        require_relative 'config/environment'
+        require Dir.pwd + 'config/environment'
         require 'action_mailer/ar_mailer'
       rescue LoadError
         usage opts, <<-EOF
