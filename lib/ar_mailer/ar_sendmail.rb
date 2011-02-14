@@ -35,14 +35,14 @@ end
 # * --daemon
 # * --mailq
 
-module ActionMailer; end
+module ArMailer; end
 
-class ActionMailer::ARSendmail
+class ArMailer::ARSendmail
 
   ##
-  # The version of ActionMailer::ARSendmail you are running.
+  # The version of ArMailer::ARSendmail you are running.
 
-  VERSION = '2.1.8'
+  VERSION = '3.0.1'
 
   ##
   # Maximum number of times authentication will be consecutively retried
@@ -98,7 +98,7 @@ class ActionMailer::ARSendmail
   # to learn how to enable ActiveRecord::Timestamp.
 
   def self.mailq
-    emails = ActionMailer::Base.email_class.find :all
+    emails = ArMailer::ActiveRecord.email_class.find :all
 
     if emails.empty? then
       puts "Mail queue is empty"
@@ -250,7 +250,8 @@ class ActionMailer::ARSendmail
     Dir.chdir options[:Chdir] do
       begin
         require Dir.pwd + '/config/environment'
-        require 'action_mailer/ar_mailer'
+        require 'ar_mailer/active_record'
+        require 'config/environment'
       rescue LoadError
         usage opts, <<-EOF
 #{name} must be run from a Rails application's root to deliver email.
@@ -348,7 +349,7 @@ class ActionMailer::ARSendmail
     return if @max_age == 0
     timeout = Time.now - @max_age
     conditions = ['last_send_attempt > 0 and created_on < ?', timeout]
-    mail = ActionMailer::Base.email_class.destroy_all conditions
+    mail = ArMailer::ActiveRecord.email_class.destroy_all conditions
 
     log "expired #{mail.length} emails from the queue"
   end
@@ -383,7 +384,9 @@ class ActionMailer::ARSendmail
         rescue Net::SMTPFatalError => e
           log "5xx error sending email %d, removing from queue: %p(%s):\n\t%s" %
                 [email.id, e.message, e.class, e.backtrace.join("\n\t")]
-          email.destroy
+          email.failed_at = Time.now.utc
+          email.failure_message = e.message
+          email.save(false) rescue nil
           session.reset
         rescue Net::SMTPServerBusy => e
           log "server too busy, stopping delivery cycle"
@@ -424,9 +427,9 @@ class ActionMailer::ARSendmail
   # last 300 seconds.
 
   def find_emails
-    options = { :conditions => ['last_send_attempt < ?', Time.now.to_i - 300] }
+    options = { :conditions => ['failed_at IS NULL AND last_send_attempt < ?', Time.now.to_i - 300] }
     options[:limit] = batch_size unless batch_size.nil?
-    mail = ActionMailer::Base.email_class.find :all, options
+    mail = ArMailer::ActiveRecord.email_class.find :all, options
 
     log "found #{mail.length} emails to send"
     mail

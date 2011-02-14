@@ -106,9 +106,19 @@ class ActionMailer::Base
   end
 
   def deliver!
-    perform_delivery_activerecord @mail
+    ArMailer::ActiveRecord.new.deliver!(@mail)
   end
 
+  def self.add_delivery_method(*args)
+
+  end
+
+end
+
+module Mail
+  class Message
+
+  end
 end
 
 ##
@@ -118,7 +128,8 @@ class Email
 
   START = Time.parse 'Thu Aug 10 2006 11:19:48'
 
-  attr_accessor :from, :to, :mail, :last_send_attempt, :created_on, :id
+  attr_accessor :from, :to, :mail, :last_send_attempt, :created_on, :id,
+                :failed_at, :failure_message
 
   @records = []
   @id = 0
@@ -127,7 +138,10 @@ class Email
 
   def self.create(record)
     record = new record[:from], record[:to], record[:mail],
-                 record[:last_send_attempt]
+                 record[:last_send_attempt],
+                 record[:failed_at],
+                 record[:failure_message]
+
     records << record
     return record
   end
@@ -147,11 +161,16 @@ class Email
     found
   end
 
-  def self.find(_, conditions = nil)
-    return records if conditions.nil?
-    now = Time.now.to_i - 300
-    return records.select do |r|
-      r.last_send_attempt < now
+  def self.find(_, options = nil)
+    return records if options.nil?
+    if options[:conditions] &&
+       options[:conditions].first == 'failed_at IS NULL AND last_send_attempt < ?'
+      now = options[:conditions].last
+      return records.select do |r|
+        r.failed_at.nil? && r.last_send_attempt < now
+      end
+    else
+      raise "Query not handled by mock :#{options.inspect}.  Beware that your sql is not actually tested"
     end
   end
 
@@ -160,13 +179,15 @@ class Email
     records.clear
   end
 
-  def initialize(from, to, mail, last_send_attempt = nil)
+  def initialize(from, to, mail, last_send_attempt = nil, failed_at = nil, failure_message = nil)
     @from = from
     @to = to
     @mail = mail
     @id = self.class.id += 1
     @created_on = START + @id
     @last_send_attempt = last_send_attempt || 0
+    @failed_at = failed_at
+    @failure_message = failure_message
   end
 
   def destroy

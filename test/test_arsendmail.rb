@@ -1,6 +1,6 @@
 require File.expand_path(File.dirname(__FILE__) + '/test_helper')
 
-class ActionMailer::ARSendmail
+class ArMailer::ARSendmail
   attr_accessor :slept
   def sleep(secs)
     @slept ||= []
@@ -15,7 +15,7 @@ class TestARSendmail < MiniTest::Unit::TestCase
     Email.reset
     Net::SMTP.reset
 
-    @sm = ActionMailer::ARSendmail.new
+    @sm = ArMailer::ARSendmail.new
     @sm.verbose = true
 
     Net::SMTP.clear_on_start
@@ -39,7 +39,7 @@ class TestARSendmail < MiniTest::Unit::TestCase
     last.last_send_attempt = last_attempt_time.to_i
 
     out, err = capture_io do
-      ActionMailer::ARSendmail.mailq
+      ArMailer::ARSendmail.mailq
     end
 
     expected = <<-EOF
@@ -63,21 +63,21 @@ Last send attempt: Thu Aug 10 11:40:05 %s 2006
 
   def test_class_mailq_empty
     out, err = capture_io do
-      ActionMailer::ARSendmail.mailq
+      ArMailer::ARSendmail.mailq
     end
 
     assert_equal "Mail queue is empty\n", out
   end
 
   def test_class_new
-    @sm = ActionMailer::ARSendmail.new
+    @sm = ArMailer::ARSendmail.new
 
     assert_equal 60, @sm.delay
     assert_equal nil, @sm.once
     assert_equal nil, @sm.verbose
     assert_equal nil, @sm.batch_size
 
-    @sm = ActionMailer::ARSendmail.new :Delay => 75, :Verbose => true,
+    @sm = ArMailer::ARSendmail.new :Delay => 75, :Verbose => true,
                                        :Once => true, :BatchSize => 1000
 
     assert_equal 75, @sm.delay
@@ -87,11 +87,11 @@ Last send attempt: Thu Aug 10 11:40:05 %s 2006
   end
 
   def test_class_parse_args_batch_size
-    options = ActionMailer::ARSendmail.process_args %w[-b 500]
+    options = ArMailer::ARSendmail.process_args %w[-b 500]
 
     assert_equal 500, options[:BatchSize]
 
-    options = ActionMailer::ARSendmail.process_args %w[--batch-size 500]
+    options = ArMailer::ARSendmail.process_args %w[--batch-size 500]
 
     assert_equal 500, options[:BatchSize]
   end
@@ -99,13 +99,13 @@ Last send attempt: Thu Aug 10 11:40:05 %s 2006
   def test_class_parse_args_chdir
     argv = %w[-c /tmp]
 
-    options = ActionMailer::ARSendmail.process_args argv
+    options = ArMailer::ARSendmail.process_args argv
 
     assert_equal '/tmp', options[:Chdir]
 
     argv = %w[--chdir /tmp]
 
-    options = ActionMailer::ARSendmail.process_args argv
+    options = ArMailer::ARSendmail.process_args argv
 
     assert_equal '/tmp', options[:Chdir]
 
@@ -113,7 +113,7 @@ Last send attempt: Thu Aug 10 11:40:05 %s 2006
 
     out, err = capture_io do
       assert_raises SystemExit do
-        ActionMailer::ARSendmail.process_args argv
+        ArMailer::ARSendmail.process_args argv
       end
     end
   end
@@ -121,13 +121,13 @@ Last send attempt: Thu Aug 10 11:40:05 %s 2006
   def test_class_parse_args_daemon
     argv = %w[-d]
 
-    options = ActionMailer::ARSendmail.process_args argv
+    options = ArMailer::ARSendmail.process_args argv
 
     assert_equal true, options[:Daemon]
 
     argv = %w[--daemon]
 
-    options = ActionMailer::ARSendmail.process_args argv
+    options = ArMailer::ARSendmail.process_args argv
 
     assert_equal true, options[:Daemon]
   end
@@ -135,13 +135,13 @@ Last send attempt: Thu Aug 10 11:40:05 %s 2006
   def test_class_parse_args_pidfile
     argv = %w[-p ./log/ar_sendmail.pid]
 
-    options = ActionMailer::ARSendmail.process_args argv
+    options = ArMailer::ARSendmail.process_args argv
 
     assert_equal './log/ar_sendmail.pid', options[:Pidfile]
 
     argv = %w[--pidfile ./log/ar_sendmail.pid]
 
-    options = ActionMailer::ARSendmail.process_args argv
+    options = ArMailer::ARSendmail.process_args argv
 
     assert_equal './log/ar_sendmail.pid', options[:Pidfile]
   end
@@ -149,7 +149,7 @@ Last send attempt: Thu Aug 10 11:40:05 %s 2006
   def test_class_parse_args_delay
     argv = %w[--delay 75]
 
-    options = ActionMailer::ARSendmail.process_args argv
+    options = ArMailer::ARSendmail.process_args argv
 
     assert_equal 75, options[:Delay]
   end
@@ -159,7 +159,7 @@ Last send attempt: Thu Aug 10 11:40:05 %s 2006
 
     argv = %w[-e production]
 
-    options = ActionMailer::ARSendmail.process_args argv
+    options = ArMailer::ARSendmail.process_args argv
 
     assert_equal 'production', options[:RailsEnv]
 
@@ -167,29 +167,29 @@ Last send attempt: Thu Aug 10 11:40:05 %s 2006
 
     argv = %w[--environment production]
 
-    options = ActionMailer::ARSendmail.process_args argv
+    options = ArMailer::ARSendmail.process_args argv
 
     assert_equal 'production', options[:RailsEnv]
   end
 
   def test_class_parse_args_mailq
-    options = ActionMailer::ARSendmail.process_args []
+    options = ArMailer::ARSendmail.process_args []
     refute_includes options, :MailQ
 
     argv = %w[--mailq]
 
-    options = ActionMailer::ARSendmail.process_args argv
+    options = ArMailer::ARSendmail.process_args argv
 
     assert_equal true, options[:MailQ]
   end
 
   def test_class_parse_args_max_age
-    options = ActionMailer::ARSendmail.process_args []
+    options = ArMailer::ARSendmail.process_args []
     assert_equal 86400 * 7, options[:MaxAge]
 
     argv = %w[--max-age 86400]
 
-    options = ActionMailer::ARSendmail.process_args argv
+    options = ArMailer::ARSendmail.process_args argv
 
     assert_equal 86400, options[:MaxAge]
   end
@@ -199,7 +199,7 @@ Last send attempt: Thu Aug 10 11:40:05 %s 2006
 
     out, err = capture_io do
       assert_raises SystemExit do
-        ActionMailer::ARSendmail.process_args []
+        ArMailer::ARSendmail.process_args []
       end
     end
 
@@ -210,13 +210,13 @@ Last send attempt: Thu Aug 10 11:40:05 %s 2006
   def test_class_parse_args_once
     argv = %w[-o]
 
-    options = ActionMailer::ARSendmail.process_args argv
+    options = ArMailer::ARSendmail.process_args argv
 
     assert_equal true, options[:Once]
 
     argv = %w[--once]
 
-    options = ActionMailer::ARSendmail.process_args argv
+    options = ArMailer::ARSendmail.process_args argv
 
     assert_equal true, options[:Once]
   end
@@ -224,7 +224,7 @@ Last send attempt: Thu Aug 10 11:40:05 %s 2006
   def test_class_usage
     out, err = capture_io do
       assert_raises SystemExit do
-        ActionMailer::ARSendmail.usage 'opts'
+        ArMailer::ARSendmail.usage 'opts'
       end
     end
 
@@ -233,7 +233,7 @@ Last send attempt: Thu Aug 10 11:40:05 %s 2006
 
     out, err = capture_io do
       assert_raises SystemExit do
-        ActionMailer::ARSendmail.usage 'opts', 'hi'
+        ArMailer::ARSendmail.usage 'opts', 'hi'
       end
     end
 
@@ -291,7 +291,7 @@ Last send attempt: Thu Aug 10 11:40:05 %s 2006
   end
 
   def test_deliver_not_called_when_no_emails
-    sm = ActionMailer::ARSendmail.new({:Once => true})
+    sm = ArMailer::ARSendmail.new({:Once => true})
     sm.expects(:deliver).never
     sm.run
   end
@@ -391,8 +391,11 @@ Last send attempt: Thu Aug 10 11:40:05 %s 2006
     end
 
     assert_equal 0, Net::SMTP.deliveries.length
-    assert_equal 0, Email.records.length
+    assert_equal 1, Email.records.length
     assert_equal 1, Net::SMTP.reset_called, 'Reset connection on SyntaxError'
+
+    assert_kind_of Time, Email.records.first.failed_at
+    assert_equal Email.records.first.failure_message, "unknown recipient"
 
     assert_equal '', out
     assert_equal "5xx error sending email 1, removing from queue: \"unknown recipient\"(Net::SMTPFatalError):\n\tone\n\ttwo\n\tthree\n", err
@@ -513,6 +516,17 @@ Last send attempt: Thu Aug 10 11:40:05 %s 2006
 
     assert_equal '', out
     assert_equal "found 3 emails to send\n", err
+  end
+
+  def test_find_emails_no_5xx_error_recovery
+    Email.create :failed_at => Time.now.utc
+    found_emails = []
+
+    out, err = capture_io do
+      found_emails = @sm.find_emails
+    end
+
+    assert_equal [], found_emails
   end
 
   def test_smtp_settings
