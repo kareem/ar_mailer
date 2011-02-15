@@ -251,7 +251,6 @@ class ArMailer::ARSendmail
       begin
         require Dir.pwd + '/config/environment'
         require 'ar_mailer/active_record'
-        require 'config/environment'
       rescue LoadError
         usage opts, <<-EOF
 #{name} must be run from a Rails application's root to deliver email.
